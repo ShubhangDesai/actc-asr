@@ -42,5 +42,5 @@ class BidirectionalRNN(nn.Module):
         y_hat = self.classifier(h)
         y_hat = y_hat.view(X.shape[0], X.shape[1], -1)
 
-        y_hat_lens = torch.IntTensor([y_hat.shape[0] for _ in range(y_hat.shape[1])])
-        return y_hat, y_hat_lens
+        #y_hat_lens = torch.IntTensor([y_hat.shape[0] for _ in range(y_hat.shape[1])])
+        return y_hat#, y_hat_lens

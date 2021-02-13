@@ -22,20 +22,27 @@ def decode_indexes(label):
     return ''.join([chars[i] for i in label])
 
 def greedy_decode(pred):
-    pred_str = ''.join(chars[i] for i in pred.argmax(1))
+    pred_str = ''.join(chars[i] for i in pred.argmax(1)).replace('@', '')
     collapsed_str = ''.join(c for c, _ in itertools.groupby(pred_str))
-    final_str = collapsed_str.replace('@', '').replace('#', '')
+    final_str = collapsed_str.replace('#', '')
 
+    if final_str == '': breakpoint()
     return final_str
 
 def error_rates(y_hat, y, target_lens, verbose=False):
+    #breakpoint()
     num_word, err_word, num_char, err_char = 0, 0, 0, 0
 
-    if len(y_hat) == 2: y_hat = y_hat[0]
+    #if len(y_hat) == 2: y_hat = y_hat[0]
     for i in range(y.shape[0]):
         pred = y_hat[:, i].data.cpu().numpy()
         label = y[i].cpu().numpy()
         target_len = target_lens[i]
+
+        #print(y_hat.shape, y.shape, len(target_lens))
+        #print(pred.shape, label.shape, target_len)
+        #print(pred[0])
+        #asdf
 
         pred_str = greedy_decode(pred)
         label_str = decode_indexes(label)[:target_len]

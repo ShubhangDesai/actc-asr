@@ -63,13 +63,13 @@ def train(model, loader, optimizer, loss_fn, forget_rate, e, writer):
 
     train_loss = 0.0
     num_word, err_word, num_char, err_char = 0, 0, 0, 0
-    for i, (X, y, target_lens) in enumerate(loader):
-        X, y, target_lens = Variable(X), y, target_lens
+    for i, (X, y, y_hat_lens, target_lens) in enumerate(loader):
+        X, y, y_hat_lens, target_lens = Variable(X), y, y_hat_lens, target_lens
         optimizer.zero_grad()
 
-        y_hat, ret = model(X)
-        w, y_hat_lens = ret if 'tuple' in str(type(ret)) else (None, ret)
-        loss = loss_fn(y_hat, y, y_hat_lens, target_lens, w=w)
+        y_hat = model(X)#, ret = model(X)
+        #w, y_hat_lens = ret if 'tuple' in str(type(ret)) else (None, ret)
+        loss = loss_fn(y_hat, y, y_hat_lens, target_lens)
 
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), 9)
@@ -77,7 +77,7 @@ def train(model, loader, optimizer, loss_fn, forget_rate, e, writer):
 
         train_loss += loss.item()
 
-        curr_num_word, curr_err_word, curr_num_char, curr_err_char = error_rates(y_hat, y, target_lens)
+        curr_num_word, curr_err_word, curr_num_char, curr_err_char = error_rates(y_hat, y, target_lens, verbose=True)
         num_word += curr_num_word
         err_word += curr_err_word
         num_char += curr_num_char
@@ -86,6 +86,7 @@ def train(model, loader, optimizer, loss_fn, forget_rate, e, writer):
         sys.stdout.write('\rEpoch %i: %i/%i' % (e+1, i+1, len(loader)))
 
         del X, y, y_hat, target_lens, y_hat_lens, loss
+        break
         #torch.cuda.empty_cache()
 
     word_acc = 1.0 - float(err_word) / num_word
@@ -106,12 +107,13 @@ def eval(model, loader, loss_fn, e, writer):
 
     val_loss = 0.0
     num_word, err_word, num_char, err_char = 0, 0, 0, 0
-    for i, (X, y, target_lens) in enumerate(loader):
+    for i, (X, y, y_hat_lens, target_lens) in enumerate(loader):
         X, y, target_lens = Variable(X), y, target_lens
 
-        y_hat, ret = model(X)
-        y_hat_lens = ret[1] if 'tuple' in str(type(ret)) else ret
+        y_hat = model(X)#, ret = model(X)
+        #y_hat_lens = ret[1] if 'tuple' in str(type(ret)) else ret
         #val_loss += loss_fn(y_hat, y, y_hat_lens, target_lens, 0.0).item()
+        val_loss += loss_fn(y_hat, y, y_hat_lens, target_lens)
 
         curr_num_word, curr_err_word, curr_num_char, curr_err_char = error_rates(y_hat, y, target_lens, verbose=True)
         num_word += curr_num_word
@@ -120,6 +122,7 @@ def eval(model, loader, loss_fn, e, writer):
         err_char += curr_err_char
 
         del X, y, y_hat, target_lens, y_hat_lens
+        break
         #torch.cuda.empty_cache()
 
     word_acc = 1.0 - float(err_word) / num_word

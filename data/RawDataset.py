@@ -46,10 +46,11 @@ class RawDataset(Dataset):
         #    X_prev[1:] = X_raw[:-1]
         #    X_raw[:, :2] -= X_prev[:, :2]
 
+        X_len = min(625, len(X_raw))
         X = np.zeros((625, X_raw.shape[1]))
         X[:X_raw.shape[0]] = X_raw[:625]
 
         y_len = len(y)
         y = np.array(y[:self.max_len] + [0]*max(0, self.max_len-len(y)))
 
-        return torch.from_numpy(X).float(), torch.from_numpy(y).int(), y_len
+        return torch.from_numpy(X).float(), torch.from_numpy(y).int(), X_len, y_len
